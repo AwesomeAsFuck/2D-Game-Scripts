@@ -1,0 +1,27 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Stride.Core.Mathematics;
+using Stride.Input;
+using Stride.Engine;
+
+namespace MyGame4
+{
+    public class Camera_Behavior : SyncScript
+    {
+        public Entity EntityToFollow;
+        private readonly int followSpeed = 3;
+        public override void Update()
+        {
+           var deltaTime=(float)Game.UpdateTime.Elapsed.TotalSeconds;
+           var currentPosition=Entity.Transform.Position;
+            var otherPosition=EntityToFollow.Transform.Position;
+            var X = MathUtil.Lerp(currentPosition.X,otherPosition.X,deltaTime * followSpeed);
+            var Y = MathUtil.Lerp(currentPosition.Y, otherPosition.Y, deltaTime * followSpeed);
+            var Z = 25;
+            Entity.Transform.Position = new Vector3(X, Y, Z);
+        }
+    }
+}
