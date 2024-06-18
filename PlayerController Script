@@ -1,0 +1,114 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Stride.Core.Mathematics;
+using Stride.Input;
+using Stride.Engine;
+using System.Windows.Controls.Primitives;
+using Stride.Rendering.Sprites;
+using Stride.Physics;
+namespace MyGame4
+{
+    public class PlayerController : SyncScript
+    {
+        private int Speed = 5;
+        private float accumulatedTime = 0;
+        private float frameDuration = 0;
+        private SpriteFromSheet sprite;
+        public Direction direction;
+        private RigidbodyComponent Phy;
+        private Vector3 lastPosition;
+
+
+        public override void Start()
+        {
+            sprite = Entity.Get<SpriteComponent>().SpriteProvider as SpriteFromSheet;
+            sprite.CurrentFrame = 0;
+
+            Phy= Entity.Get<RigidbodyComponent>();
+            direction = Direction.Down;
+        }
+
+        public override void Update()
+        {
+           var deltaTime=(float)Game.UpdateTime.Elapsed.TotalSeconds;
+            
+            Movement(deltaTime);
+            HandleCollisions();
+        }
+        public  void Movement(float deltaTime) 
+        {
+            bool animationStarted = false;
+            if (Input.IsKeyDown(Keys.W)) 
+            {
+                Entity.Transform.Position.Y +=Speed * deltaTime;
+                StartAnimation(startFrame:13,endFrame:16,deltaTime);
+                animationStarted = true;
+                direction = Direction.Up;
+            }
+            if (Input.IsKeyDown(Keys.S))
+            {
+                Entity.Transform.Position.Y += -Speed * deltaTime;
+                StartAnimation(startFrame: 1, endFrame: 4, deltaTime);
+                animationStarted = true;
+                direction = Direction.Down;
+            }
+            if (Input.IsKeyDown(Keys.A))
+            {
+                Entity.Transform.Position.X += -Speed * deltaTime;
+                StartAnimation(startFrame: 9, endFrame: 12, deltaTime);
+                animationStarted = true;
+                direction = Direction.Left;
+            }
+            if (Input.IsKeyDown(Keys.D))
+            {
+                Entity.Transform.Position.X += Speed * deltaTime;
+                StartAnimation(startFrame: 5, endFrame: 8, deltaTime);
+                animationStarted = true;
+                direction = Direction.Right;
+            }
+            if (!animationStarted) 
+            {
+                accumulatedTime = 0;          
+            }
+        }
+        private void StartAnimation(int startFrame, int endFrame, float deltaTime)
+        {
+            accumulatedTime += deltaTime;
+            if (accumulatedTime >= frameDuration)
+            {
+                sprite.CurrentFrame += 1;
+                if (sprite.CurrentFrame > endFrame || sprite.CurrentFrame < startFrame)
+                {
+                    sprite.CurrentFrame = startFrame;
+                }
+                accumulatedTime -= frameDuration;
+
+            }
+
+        }
+        public void HandleCollisions() 
+        {
+            if (Phy.Collisions.Count<=0) 
+            {
+                lastPosition= Entity.Transform.Position;
+            }
+            if (Phy.Collisions.Count > 0 && direction == Direction.Up)
+            {
+                Entity.Transform.Position = lastPosition - new Vector3 (0, 1f, 0);
+            }
+           else if (Phy.Collisions.Count > 0 && direction == Direction.Down)
+            {
+                Entity.Transform.Position = lastPosition - new Vector3(0, -1f, 0);
+            }
+           else if (Phy.Collisions.Count > 0 && direction == Direction.Right)
+            {
+                Entity.Transform.Position = lastPosition - new Vector3(1f, 0, 0);
+            }
+            if (Phy.Collisions.Count > 0 && direction == Direction.Left)
+            {
+                Entity.Transform.Position = lastPosition - new Vector3(-1f, 0, 0);
+            }
+        }
+    }
+}
