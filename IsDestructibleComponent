@@ -1,0 +1,20 @@
+using Stride.Engine;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Stride.Physics;
+
+namespace MyGame4
+{
+    public class IsDestructibleComponent : EntityComponent
+    {
+        public void Destory() 
+        {
+            Entity.Scene = null;
+            Entity.Dispose();
+        }
+
+    }
+}
