@@ -1,0 +1,72 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Stride.Core.Mathematics;
+using Stride.Input;
+using Stride.Engine;
+using Stride.Graphics;
+using Stride.Rendering.Sprites;
+using Stride.Physics;
+using Stride.Audio;
+
+namespace MyGame4
+{
+    public class Shooting : SyncScript
+    {
+        private bool isShooting;
+        public SpriteSheet itemSheet;
+        private SoundInstance shotsoundInstance;
+
+
+        public override void Start()
+        {
+            var shotsound = Content.Load<Sound>("LaserShot");
+            shotsoundInstance = shotsound.CreateInstance();
+        }
+
+        public override void Update()
+        {
+            var direction = Entity.Get<PlayerController>().direction;
+            if (Input.HasKeyboard)
+            {
+                if (Input.IsKeyPressed(Keys.Space) && !isShooting) 
+                {
+                    if (direction == Direction.Up) ShootBall(new Vector3(0,1,0));
+                    if (direction == Direction.Down) ShootBall(new Vector3(0, -1, 0));
+                    if (direction == Direction.Right) ShootBall(new Vector3(1, 0, 0));
+                    if (direction == Direction.Left) ShootBall(new Vector3(-1, 0, 0));
+
+                }
+                isShooting = Input.IsKeyPressed(Keys.Space);
+            }
+        }
+        private void ShootBall(Vector3 direction) 
+        {
+            var ball = new Entity();
+            var sprite = ball.GetOrCreate<SpriteComponent>();
+            sprite.SpriteProvider = new SpriteFromSheet()
+            {
+                Sheet = itemSheet,
+                CurrentFrame = 17,
+            };
+            var rb = ball.GetOrCreate<RigidbodyComponent>();
+            rb.RigidBodyType = RigidBodyTypes.Kinematic;
+            rb.ColliderShapes.Add(new BoxColliderShapeDesc
+            {
+                Is2D = true,
+                Size = new Vector3(0.3F, 0.3F, 1)
+            }) ;
+            rb.CollisionGroup = CollisionFilterGroups.CustomFilter1;
+
+            var behaviour = ball.GetOrCreate<Projectile_Behavior>();
+            behaviour.direction= direction;
+
+            ball.Transform.Position = Entity.Transform.Position;
+            Entity.Scene.Entities.Add(ball);
+
+            shotsoundInstance.Play();
+        }
+    }
+}
