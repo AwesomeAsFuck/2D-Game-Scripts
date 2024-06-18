@@ -1,0 +1,73 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Stride.Core.Mathematics;
+using Stride.Input;
+using Stride.Engine;
+using Stride.Rendering.Sprites;
+using Stride.Graphics;
+using Stride.Physics;
+
+
+namespace MyGame4
+{
+    public class Spawn_Point : SyncScript
+    {
+        private float rotationSpeed = 0.1f;
+        private float accumulated = 0;
+
+        public override void Update()
+        {
+            var deltaTime = (float)Game.UpdateTime.Elapsed.TotalSeconds;
+            Entity.Transform.Rotation += Quaternion.RotationZ(deltaTime * rotationSpeed);
+
+            accumulated += deltaTime;
+            if (accumulated > 5) 
+            {
+                SpawnGhost();
+                accumulated= 0; 
+            }
+        }
+        private void SpawnGhost()
+        {
+            var GhostHunter = Entity.Scene.Entities.FirstOrDefault(e => e.Name == "GhostHunter");
+            if (GhostHunter == null)
+            {
+                return;
+            }
+
+            var ghost = new Entity();
+            ghost.Name = "Ghost";
+            var sprite = ghost.GetOrCreate<SpriteComponent>();
+            sprite.SpriteProvider = new SpriteFromSheet
+
+            {
+                Sheet = Content.Load<SpriteSheet>("Enemy"),
+                CurrentFrame = 0,
+            };
+
+            var rb = ghost.GetOrCreate<RigidbodyComponent>();
+            rb.RigidBodyType = RigidBodyTypes.Kinematic;
+            rb.ColliderShapes.Add(new BoxColliderShapeDesc
+
+            {
+                Is2D = true,
+                Size = new Vector3(-0.6F,-0.8F,-1)
+             
+             });
+
+            rb.CollisionGroup = CollisionFilterGroups.CustomFilter2;
+
+            ghost.GetOrCreate<GhostMovement>();
+            ghost.GetOrCreate<IsDestructibleComponent>();
+            ghost.GetOrCreate<CollidesWith>();
+
+            ghost.Transform.Position = Entity.Transform.Position;
+            Entity.Scene.Entities.Add(ghost);   
+        }
+    }
+}
+
+
