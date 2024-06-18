@@ -1,0 +1,47 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Stride.Core.Mathematics;
+using Stride.Input;
+using Stride.Engine;
+using BulletSharp;
+using Stride.Physics;
+
+namespace MyGame4
+{
+    public class Projectile_Behavior : AsyncScript
+    {
+        public Vector3 direction;
+        public const float speed=0.05f;
+
+        public override async Task Execute()
+        {
+            Script.AddTask(CheckCollusion);
+            while(Game.IsRunning)
+            {
+                // Do stuff every new frame
+                await Script.NextFrame();
+                var startingPos = Entity.Transform.Position;
+                Entity.Transform.Position = startingPos + speed * direction;
+            }
+        }
+        private async Task CheckCollusion() 
+        {
+            var physics = Entity.Get<RigidbodyComponent>();
+            var collider = await physics.NewCollision();
+
+            var affected = collider.ColliderA == physics ? collider.ColliderB.Entity : collider.ColliderA.Entity;
+
+            var isDestructable = affected.Get<IsDestructibleComponent>();
+            if (isDestructable !=  null) 
+            {
+              isDestructable.Destory();
+            }
+            Entity.Scene = null;
+            Entity.Dispose();
+
+        }
+    }
+}
